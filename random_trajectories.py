@@ -1,6 +1,6 @@
-__author__ = 'igobrilhante'
+from extent_randtraj import trajectory_generator as t
 
-import trajectory_generator as t
+__author__ = 'igobrilhante'
 
 if __name__ == '__main__':
 

@@ -1,6 +1,6 @@
-__author__ = 'igobrilhante'
+from full_randtraj import full_trajectory_generator as fullrandtraj
 
-import full_trajectory_generator as fullrandtraj
+__author__ = 'igobrilhante'
 
 if __name__ == '__main__':
 
