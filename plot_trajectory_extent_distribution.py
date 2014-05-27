@@ -26,19 +26,19 @@ axes.set_axis_bgcolor('white')
 axes.yaxis.label.set_size(22)
 axes.xaxis.label.set_size(22)
 
-city = "pisa"
-dow = "we"
+city = "milan"
+dow = "wd"
 hours = 5
 # method = "krandomtraj"
 # method = "fullrandtraj"
-method = "randomtraj"
+method = "randomtraj."
 
-query_ted = queries.create_ted_from_table("(select * from "+method+"."+city+"_"+str(hours)+"h_"+dow+" )", city)
-query_ted_original = queries.create_ted(city, dow, hours)
+traj_query = "select * from %s order by userid, start_time" % ( method + city+"_"+str(hours)+"h_"+dow )
 
-dist_ted = dist.compute_probability_density_function(db_utils.query(query_ted))
 
-dist_ted_original = dist.compute_probability_density_function(db_utils.query(query_ted_original))
+dist_ted = dist.compute_probability_density_function(db_utils.query_trajectory_extent_by_query( traj_query, city, dow, hours ))
+
+dist_ted_original = dist.compute_probability_density_function(db_utils.query_trajectory_extent( city, dow, hours ))
 
 print "TED", dist_ted[0], dist_ted[1]
 

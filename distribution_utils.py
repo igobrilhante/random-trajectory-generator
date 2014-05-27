@@ -3,29 +3,42 @@ __author__ = 'igobrilhante'
 import matplotlib.mlab as mlab
 import numpy as np
 import random
+import utils
+
+
+def read_distribution(f):
+    print f
 
 
 # Compute probability distribution
 # return an array of cumulative probability
-def compute_probability_distribution(data, is_cum_sum=True):
+def compute_probability_distribution(arr, is_cum_sum=True):
     # stats used - count
+
+    agg_data = utils.array2recarray( arr )
     stats = (
         ("key", len, 'total'),
     )
-    res = mlab.rec_groupby(data, ('key',), stats)
+
+    res = mlab.rec_groupby(agg_data, ('key',), stats)
     if is_cum_sum:
-        cumsum = np.cumsum(res.total/float(len(data)))
+        cumsum = np.cumsum(res.total/float(len(arr)))
     else:
-        cumsum = res.total/float(len(data))
+        cumsum = res.total/float(len(arr))
     # return array with the keys and the cummulative distribution
     return np.array([res.key, cumsum])
+
 
 
 # Compute probability density function
 # Return array of probability of k <= x
 def compute_probability_density_function(data, is_cum_sum=True):
 
-    freq, bins = np.histogram(data.key)
+    # keys to be used on axis x
+    # m = np.max(data)
+    # s = np.arange(1000, m+5001, m/10)
+
+    freq, bins = np.histogram(data)
 
     s = np.sum(freq)
     if is_cum_sum:
@@ -49,6 +62,7 @@ def random_from_probability(distribution):
     # Initialize the element
     elem = -1
 
+
     # get the element if its probability if greater than the flip value
     for i in range(0, len(cumsum)):
         if flip <= cumsum[i]:
@@ -56,7 +70,6 @@ def random_from_probability(distribution):
             break
 
     return elem
-
 
 # Generate random value based on the given distribution
 def random_from_probability_2(distribution_1, distribution_2):
@@ -90,5 +103,13 @@ def random_from_probability_2(distribution_1, distribution_2):
             break
 
     return elem_1, elem_2
+
+
+# pdf = compute_probability_density_function("/tmp/teste_pdf.txt")
+#
+# prob = compute_probability_distribution("/tmp/teste.txt")
+#
+# print random_from_probability(prob)
+# print random_from_probability(pdf)
 
 

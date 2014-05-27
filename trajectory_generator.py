@@ -15,103 +15,138 @@ import numpy as np
 import datetime
 import time
 import queries
+import utils
 
+
+trajectories_per_user_distribution_f = ""
+trajectory_size_distribution_f = ""
+trajectory_extent_distribution_f = ""
+
+# number of users
+n_users = 10
 
 R_EARTH = 6371000
 
 MAX_ITER = 10
 MAX_TRAJS = 100
 
+TABLE_SCHEMA = "randomtraj."
 
 TIME_DELTA = datetime.timedelta(minutes=45)
 
+# distance from place to place
+DISTANCE = [50, 75]
+
 
 # Get a next place from a given place w.r.t. an extent
-def get_next_place(_extent, _place_list, _from_place, prob_come_back):
-    r_ = random.randint(0, len(_place_list) - 1)
+def get_next_place( limit_extent, place_list, from_place, prob_come_back ):
+
+    if limit_extent < 0:
+        return None
+
+    r_ = random.randint(0, len(place_list) - 1)
 
     # select the first place
-    if _from_place is None:
-        return _place_list[r_]
+    if from_place is None:
+        return place_list[r_]
     # otherwise select the next one from a given place _from_place
     else:
 
-        # try selecting places within the _extent
-        allowed_list = filter_close_places(_from_place, _extent, _place_list)
+        allowed_list = filter_close_places(from_place, limit_extent, place_list)
         l = np.max([len(allowed_list) - 1, 1])
-
+        # len is at least 1, which include from_place itself
+        # if more than one PoI is found
         if len(allowed_list) > 1:
             r = random.randint(0, l)
             return allowed_list[r]
+        # otherwise
         else:
-            # probabilidade de voltar para o mesmo ponto
-            f = random.random()
-            if f < prob_come_back:
-                return _from_place
-            else:
-                return get_nn(_from_place, _place_list)
+            nn = get_nearest_place(from_place, place_list)
+
+            distance = utils.compute_distance(from_place, nn)
+            # returns the nearest place if the distance between it and from_place is shorter than limit_extent
+            # otherwise do not retrieve any place
+            return nn #if distance < limit_extent else None
+
+            # return None
+
+            # # probabilidade de voltar para o mesmo ponto
+            # f = random.random()
+            # if f > prob_come_back:
+            #     return get_closer_place(_from_place, _place_list)
+            # else:
+            #     return _from_place
 
 
 # filter out places that are reacheable from a given one
-def filter_close_places(_from_place, _extent, _place_list):
+def filter_close_places(from_place, limit_extent, place_list):
     allowed_list = []
-    for p in _place_list:
-        d = compute_distance(p, _from_place)
-        if d <= _extent:
+    for p in place_list:
+        d = utils.compute_distance(p, from_place)
+        if d <= limit_extent:
             allowed_list.append(p)
     return allowed_list
 
 
-# nearest neighbor query
-def get_nn(given_place, place_list):
+def get_nearest_place(given_place, place_list):
     min_dist = float("inf")
     p = None
 
     for place in place_list:
         if place[0] != given_place[0]:
-            d = compute_distance(place, given_place)
+            d = utils.compute_distance(place, given_place)
             if d < min_dist:
                 min_dist = d
                 p = place
     return p
 
 
-# Compute the distance between two places
-# return the distance in meters
-def compute_distance(_place_1, _place_2):
-    d_lat = math.radians(_place_2[1]-_place_1[1])
-    dlong = math.radians(_place_2[2]-_place_1[2])
+# Get close places to a given place
+def get_close_places(given_place, place_list):
 
-    lat1 = math.radians(_place_1[1])
-    lat2 = math.radians(_place_2[1])
+    res = [given_place]
+    # for place in place_list:
+    #     if place[0] != given_place[0]:
+    #         d = compute_distance(place, given_place)
+    #         if d <= random.randint(60, 80):
+    #             res.append(place)
 
-    a = math.sin(d_lat/2) * math.sin(d_lat/2) + \
-        math.sin(dlong/2) * math.sin(dlong/2) * math.cos(lat1) * math.cos(lat2)
-
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
-
-    return R_EARTH * c
+    return res
 
 
-# Compute the extent of the trajectory
-def compute_extent(_trajectory):
-    ext = 0.0
-
-    for j in range(1, len(_trajectory)):
-        i = j - 1
-        ext += compute_distance(_trajectory[i][0][0], _trajectory[j][0][0])
-
-    return ext
 
 
-def generate_random_trajectories(place_list, n_users,
-                                 trajectories_per_user_distribution,
-                                 trajectory_size_distribution,
-                                 trajectory_extent_distribution,
-                                 prob_come_back=0.5,
-                                 increase_extent=2.5):
+def generate_random_trajectories(city, dow, hours, prob_come_back=0.5, extent_factor=2.5):
+
+    print city, dow, hours, prob_come_back, extent_factor
 
     trajectory_result = dict()
+
+    place_list = db.query_places(city, dow, hours)
+
+    ################################## QUERIES ##################################
+
+    tsd = queries.create_tsd(city, dow, hours)
+
+    tpu = queries.create_tpu(city, dow, hours)
+
+    # ted = queries.create_ted(city, dow, hours)
+
+    ################################## END QUERIES ##################################
+
+    # LOAD DATA
+    # Compute the distributions
+    n_users = db.get_number_of_users(city, dow, hours)
+
+    trajectories_per_user_distribution = dist.compute_probability_distribution(db.query(tpu))
+
+    # trajectory_size_distribution = dist.compute_probability_distribution(db.query(tsd))
+    # print "Trajectory Size Distri ", trajectory_size_distribution
+
+    trajectory_extent_distribution = dist.compute_probability_density_function(db.query_trajectory_extent( city, dow, hours ))
+    print "Trajectory Extent Dist ", trajectory_extent_distribution
+
+    print "N of users:", n_users
 
     n_trajs_total = 0
 
@@ -132,53 +167,72 @@ def generate_random_trajectories(place_list, n_users,
 
             today = datetime.datetime.fromtimestamp(time.time())
 
-            n_points, extent = dist.random_from_probability_2(trajectory_size_distribution, trajectory_extent_distribution)
+            # extent = dist.random_from_probability_2(trajectory_size_distribution,
+            #                                                   trajectory_extent_distribution)
 
-            traj = generate_trajectory(n_points, extent, place_list, today, prob_come_back, increase_extent)
+            # # number of points
+            # n_points = dist.random_from_probability(trajectory_size_distribution)
+            #
+            # # extent of the trajectory
+            extent = dist.random_from_probability(trajectory_extent_distribution)
+
+            # print "Generating Traj ", trajectories_count+1, extent
+            traj = generate_trajectory(extent, place_list, today, prob_come_back, extent_factor)
 
             trajectories_count += 1
 
             n_trajs_total += 1
 
+            # print "Generated Traj ", utils.compute_trajectory_extent(traj)
             trajectory_result[u].append(traj)
+
+    max_extent = np.max(trajectory_extent_distribution[0])
+    print max_extent
+
+    today = datetime.datetime.fromtimestamp(time.time())
+
+    traj = generate_trajectory(max_extent, place_list, today, prob_come_back, extent_factor)
+    print "Generated Traj ", utils.compute_trajectory_extent(traj)
+
+    trajectory_result[n_users] = [traj]
+    n_trajs_total += 1
 
     print "Total trajectories: " + str(n_trajs_total)
 
-    return trajectory_result
+    table = TABLE_SCHEMA + city+"_"+str(hours)+"h_"+dow
+
+    db.store_trajectories(trajectory_result, table)
 
 
 # Generate several trajectories and pick the best one based on the number
 # of points and the extent
-def generate_trajectory(n_points, extent, place_list, today, prob_come_back, increase_extent):
+def generate_trajectory(extent, place_list, today, prob_come_back, extent_factor):
 
-    total_extent = (extent/(n_points-1)) * increase_extent
+    total_extent = 0.0
+    from_place = None
+    traj = []
 
     while True:
-        traj = []
-        places_count = 0
-        from_place = None
 
-        while places_count < n_points:
+        tomorrow = today + TIME_DELTA
 
-            tomorrow = today + TIME_DELTA
+        place = get_next_place(extent - total_extent, place_list, from_place, prob_come_back)
 
-            place = get_next_place(total_extent, place_list, from_place, prob_come_back)
-
-            if place is None:
-                break
-
-            traj.append(([place], today, tomorrow))
-
-            places_count += 1
-
-            from_place = place
-
-            # go forward in time
-            today = tomorrow + TIME_DELTA
-
-        if places_count == n_points:
+        if place is None:
             break
 
+        traj.append(([place], today, tomorrow))
+
+        total_extent += utils.compute_distance(place, from_place) if from_place is not None else 0
+        # total_extent = extent - traj_extent
+
+        # print extent, total_extent
+        # print from_place, place
+        from_place = place
+        # go forward in time
+        today = tomorrow + TIME_DELTA
+
+        # print extent, total_extent, utils.compute_trajectory_extent(traj)
     return traj
 
 

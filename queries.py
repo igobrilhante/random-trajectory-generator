@@ -15,7 +15,6 @@ def create_tsd(city, dow, hours):
             group by trajid\
             ) a"
 
-
 def create_tsd_from_table(table):
     return " select count::int as total \
             from                            \
