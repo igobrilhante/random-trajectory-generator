@@ -1,12 +1,12 @@
-from extent_randtraj import trajectory_generator as t
+import extent_randtraj.extent_trajectory_generator as t
 
 __author__ = 'igobrilhante'
 
 if __name__ == '__main__':
 
-    city = 'firenze'
+    city = 'pisa'
     dows = ['wd', 'we']
-    hours = 6
+    hours = 5
 
     prob_come_back = 0.001
     extent_factor = 1000000000

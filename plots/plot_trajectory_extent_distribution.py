@@ -26,14 +26,15 @@ axes.set_axis_bgcolor('white')
 axes.yaxis.label.set_size(22)
 axes.xaxis.label.set_size(22)
 
-city = "milan"
-dow = "wd"
+city = "pisa"
+dow = "we"
 hours = 5
 # method = "krandomtraj"
 # method = "fullrandtraj"
-method = "randomtraj."
+# method = "randomtraj"
+method = "distrandtraj"
 
-traj_query = "select * from %s order by userid, start_time" % ( method + city+"_"+str(hours)+"h_"+dow )
+traj_query = "select * from %s order by userid, start_time" % ( method + "." + city + "_" + str(hours) + "h_" + dow )
 
 
 dist_ted = dist.compute_probability_density_function(db_utils.query_trajectory_extent_by_query( traj_query, city, dow, hours ))

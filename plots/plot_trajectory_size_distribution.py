@@ -24,14 +24,14 @@ axes.set_axis_bgcolor('white')
 axes.yaxis.label.set_size(22)
 axes.xaxis.label.set_size(22)
 
-city = "milan"
-dow = "we"
-hours = 6
+city = "pisa"
+dow = "wd"
+hours = 5
 # method = "krandomtraj"
 # method = "fullrandtraj"
-method = "randomtraj"
+method = "distrandtraj"
 
-query_tsd = queries.create_tsd_from_table("(select * from "+method+"."+city+"_"+str(hours)+"h_"+dow+" ) a")
+query_tsd = queries.create_tsd_from_table("(select * from " + method + "." + city + "_" + str(hours) + "h_" + dow + " ) a")
 query_tsd_original = queries.create_tsd(city, dow, hours)
 
 dist_tsd = dist.compute_probability_distribution(db_utils.query(query_tsd), is_cum_sum=False)
