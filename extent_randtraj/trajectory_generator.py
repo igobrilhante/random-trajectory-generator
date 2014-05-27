@@ -35,9 +35,6 @@ TABLE_SCHEMA = "randomtraj."
 
 TIME_DELTA = datetime.timedelta(minutes=45)
 
-# distance from place to place
-DISTANCE = [50, 75]
-
 
 # Get a next place from a given place w.r.t. an extent
 def get_next_place( limit_extent, place_list, from_place, prob_come_back ):
@@ -141,8 +138,8 @@ def generate_random_trajectories(city, dow, hours, prob_come_back=0.5, extent_fa
 
     trajectories_per_user_distribution = dist.compute_probability_distribution(db.query(tpu))
 
-    # trajectory_size_distribution = dist.compute_probability_distribution(db.query(tsd))
-    # print "Trajectory Size Distri ", trajectory_size_distribution
+    trajectory_size_distribution = dist.compute_probability_distribution(db.query(tsd))
+    print "Trajectory Size Distri ", trajectory_size_distribution
 
     trajectory_extent_distribution = dist.compute_probability_density_function(db.query_trajectory_extent( city, dow, hours ))
     print "Trajectory Extent Dist ", trajectory_extent_distribution

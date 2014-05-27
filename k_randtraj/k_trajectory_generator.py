@@ -4,6 +4,7 @@ __author__ = 'igobrilhante'
 
 import random
 import utils.db_utils as db
+import utils.utils as utils
 
 
 
