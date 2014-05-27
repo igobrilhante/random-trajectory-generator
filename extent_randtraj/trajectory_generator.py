@@ -4,7 +4,11 @@
 #   Distribution of trajectories per user
 #   Distribution of size of trajectories
 #   Distribution of extent of trajectories
-from utils import db_utils as db, queries
+
+import utils.distribution_utils as dist
+import utils.db_utils as db
+import utils.queries as queries
+import utils.utils as utils
 
 __author__ = 'igobrilhante'
 
@@ -12,7 +16,7 @@ import random
 import numpy as np
 import datetime
 import time
-import utils
+
 
 
 trajectories_per_user_distribution_f = ""

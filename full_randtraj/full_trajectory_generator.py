@@ -3,7 +3,10 @@
 #   Number of users
 #   Max number of trajectories per users
 #   Max size of the trajectories
-from utils import db_utils as db, queries
+
+import utils.distribution_utils as dist
+import utils.db_utils as db
+import utils.queries as queries
 
 __author__ = 'igobrilhante'
 

@@ -3,7 +3,8 @@ from utils import db_utils as db
 __author__ = 'igobrilhante'
 
 import random
-import utils
+import utils.db_utils as db
+
 
 
 TABLE_SCHEMA = "krandomtraj."

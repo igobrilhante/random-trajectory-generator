@@ -1,4 +1,6 @@
-from utils import db_utils, queries
+import utils.db_utils as db_utils
+import utils.distribution_utils as dist
+import utils.queries as queries
 
 __author__ = 'igobrilhante'
 
